@@ -43,13 +43,13 @@ This guide contains explanations and examples of 18 React Hooks.
 
 `useEffect` is a hook provided by React that allows you to perform side effects in functional components. Side effects are operations that happen outside of the usual React component lifecycle, like fetching data from an API, modifying the DOM, setting up subscriptions, or scheduling timers. These operations are crucial for building dynamic and interactive applications.
 
-useEffect is a function that takes two arguments:
+Anatomy of useEffect: It is a function that takes two arguments:
 
 1. `Effect function`: This is the first argument, and it's a function that contains the code for your side effect. It's executed after the component has rendered. This function can return a cleanup function, which will be called when the component unmounts or when dependencies change.
 
 2. `Dependency array`: The second argument is an array that contains variables or values that the effect depends on. When any of these dependencies change, the effect function will be re-executed. If you pass an empty array ([]), the effect runs once when the component mounts and doesn't depend on any specific variable.
 
-Key Concepts and Use Cases:
+Use Cases:
 
 - `Fetching Data`: You can use useEffect to fetch data from an API when the component mounts or when certain dependencies change.
 
@@ -196,6 +196,8 @@ Common Pitfalls:
 
 `useReducer` is a powerful and versatile hook in React that provides a more controlled way to manage state in your components compared to useState. It's especially useful when dealing with complex state management or when you need to perform state updates based on the previous state.
 
+Anatomy of useReducer:
+
 At its core, useReducer is a function that helps you manage state in your React components. It takes two arguments: a `reducer function` and an `initial state`. The reducer function is responsible for specifying how the state should change in response to various actions, and the initial state sets the starting point for your state management.
 
 - `Reducer Function`: The reducer function is the heart of useReducer. It takes two arguments: the current state and an action. This function's purpose is to determine the new state based on the current state and the action. It returns the updated state. The action is typically an object that describes what kind of state change you want to make.
@@ -240,6 +242,8 @@ Benefits of useReducer:
 - Complex State Management: It's excellent for managing complex state logic, such as forms, lists, or any state that depends on the previous state.
 - Testing: Reducer functions are pure functions, making them easy to test, which is crucial for writing robust and maintainable code.
 - Readability: Separating the logic for state updates into a single reducer function can improve the readability of your components, especially as they grow in complexity.
+
+Use cases:
 
 - `Counter Example`: In this simple example, we'll create a counter using useReducer. We have two actions, "INCREMENT" and "DECREMENT," to update the count.
 
@@ -733,13 +737,15 @@ Common Pitfalls:
 
 `useState` is a React hook that allows functional components to declare and manage state. It enables you to introduce dynamic behavior into your components by defining variables that can hold and update data. These state variables are the building blocks of interactive and responsive interfaces. `useState` is a cornerstone of React development because it empowers functional components to manage dynamic data and reactivity. It simplifies state management and reduces the complexity of your code by handling updates and re-renders automatically. This makes your components more predictable and easier to maintain.
 
+Anatomy of useState:
+
 - Creation: To create a state variable, you call the useState function with an initial state value. The function returns an array with two elements: the current state value and a function to update that state.
 
 - State Variable: The first element in the array is the current state value, which you can read and display in your component.
 
 - State Updater: The second element is a function that allows you to modify the state, triggering re-renders of the component with the updated state.
 
-Key Concepts and Use Cases:
+Use Cases:
 
 - `Managing Component State`: Use useState to declare and manage component-specific state, such as form input values, visibility toggles, or any data that should change over time.
 
