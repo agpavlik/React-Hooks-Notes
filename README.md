@@ -1,13 +1,12 @@
 # React Hooks Notes
 
-This guide contains explanations and examples of 18 React Hooks.
+This guide contains explanations and examples of 17 React Hooks.
 
 - [useCallback](#1)
 - [useContext](#2)
 - [useDebugValue](#3)
 - [useDeferredValue](#4)
 - [useEffect](#5) ❗
-- [useFetcher](#6)
 - [useId](#7)
 - [useImperativeHandle](#8)
 - [useImperativeMethods](#9)
@@ -216,11 +215,7 @@ const Greeting = () => {
 
 #### Anatomy:
 
-useDebugValue takes two arguments:
-
-- The first argument is the value you want to debug. This can be any data or value that you find relevant for debugging. It can be a primitive data type like a string or number, or it can be an object or function.
-
-- The second argument is an optional formatting function that will be applied to the debug value. This function can format the value in a way that makes it more informative or human-readable. It is only called when the React DevTools are open and when it's needed to display the value.
+useDebugValue takes twuseId is a React Hook for generating unique IDs that can be passed to accessibility attributes.is an optional formatting function that will be applied to the debug value. This function can format the value in a way that makes it more informative or human-readable. It is only called when the React DevTools are open and when it's needed to display the value.
 
 #### Key Concepts:
 
@@ -234,7 +229,7 @@ useDebugValue takes two arguments:
 
 - `Displaying Relevant Context`: You can use useDebugValue to display information about the component's internal state, props, or other relevant data. For example, you could show the current state of a timer component or the data being fetched by an API call.
 
-```javascript
+````javascript
 // Suppose you have a component that fetches data from an API, and you want to display the current status of the data fetch. In this example, we use useDebugValue to display the loading and error states in the React DevTools, making it easier to track the status of the API call.
 import { useState, useEffect, useDebugValue } from "react";
 
@@ -274,11 +269,7 @@ function DataFetchingComponent() {
   if (data.error) {
     return <div>Error: {data.error.message}</div>;
   }
-  return <div>Data: {data.value}</div>;
-}
-```
-
-- `Descriptive Labels`: useDebugValue allows you to provide clear, human-readable labels for the data you're displaying. This can be especially helpful when dealing with complex data structures.
+  return <div>Data: {useId is a React Hook for generating unique IDs that can be passed to accessibility attributes.isplaying. This can be especially helpful when dealing with complex data structures.
 
 ```javascript
 //Suppose you have a custom hook for form validation, and you want to display descriptive labels for the validation errors. In this example, useDebugValue is used to display the validation errors in the React DevTools with descriptive labels.
@@ -314,7 +305,7 @@ function useFormValidation(initialState) {
     validateForm,
   };
 }
-```
+````
 
 - `Custom Hooks`: Custom hooks can use useDebugValue to expose the state or behavior of the hook for better debugging. For instance, a custom form validation hook can display error messages or the current state of form inputs.
 
@@ -631,11 +622,94 @@ function TimerExample() {
 - Forgetting to return a cleanup function, causing memory leaks or unintended behavior.
 - Overusing useEffect, leading to performance issues.
 
-## 🔥 useFetcher <a name="6"></a>
-
 ---
 
 ## 🔥 useId <a name="7"></a>
+
+`useId` is a React Hook for generating unique IDs that can be passed to accessibility attributes.
+
+#### Anatomy
+
+Call useId at the top level of your component to generate a unique ID. useId does not take any parameters. useId returns a unique ID string associated with this particular useId call in this particular component.
+
+```javascript
+import { useId } from "react";
+
+function PasswordField() {
+  const passwordHintId = useId();
+  return(
+  <>
+    <input type="password" aria-describedby={passwordHintId} />
+    <p id={passwordHintId}>
+  </>
+  )
+}
+```
+
+#### Use cases
+
+- `Generating unique IDs` for accessibility attributes
+
+```javascript
+import { useId } from "react";
+
+function PasswordField() {
+  const passwordHintId = useId();
+  return (
+    <>
+      <label>
+        Password:
+        <input type="password" aria-describedby={passwordHintId} />
+      </label>
+      <p id={passwordHintId}>
+        The password should contain at least 18 characters
+      </p>
+    </>
+  );
+}
+```
+
+- `Generating IDs for several related elements`. If you need to give IDs to multiple related elements, you can call useId to generate a shared prefix for them. This lets you avoid calling useId for every single element that needs a unique ID.
+
+```javascript
+import { useId } from "react";
+
+export default function Form() {
+  const id = useId();
+  return (
+    <form>
+      <label htmlFor={id + "-firstName"}>First Name:</label>
+      <input id={id + "-firstName"} type="text" />
+      <hr />
+      <label htmlFor={id + "-lastName"}>Last Name:</label>
+      <input id={id + "-lastName"} type="text" />
+    </form>
+  );
+}
+```
+
+- `Specifying a shared prefix for all generated IDs`. If you render multiple independent React applications on a single page, pass identifierPrefix as an option to your createRoot or hydrateRoot calls. This ensures that the IDs generated by the two different apps never clash because every identifier generated with useId will start with the distinct prefix you’ve specified.
+
+```javascript
+import { createRoot } from "react-dom/client";
+import App from "./App.js";
+import "./styles.css";
+
+const root1 = createRoot(document.getElementById("root1"), {
+  identifierPrefix: "my-first-app-",
+});
+root1.render(<App />);
+
+const root2 = createRoot(document.getElementById("root2"), {
+  identifierPrefix: "my-second-app-",
+});
+root2.render(<App />);
+```
+
+#### Common pitfalls:
+
+- useId is a Hook, so you can only call it at the top level of your component or your own Hooks. You can’t call it inside loops or conditions. If you need that, extract a new component and move the state into it.
+- nuseId should not be used to generate keys in a list. Keys should be generated from your data.
 
 ---
 
