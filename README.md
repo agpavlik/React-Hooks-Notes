@@ -351,6 +351,161 @@ function useTimer(initialTime) {
 
 ## 🔥 useDeferredValue <a name="4"></a>
 
+`useDeferredValue` was designed to help you manage and coordinate updates in concurrent or asynchronous scenarios, improving user experience and application performance. This hook is particularly useful in situations where you have a value that might be updated frequently, and you want to defer applying those updates until the most appropriate time, such as when the user is idle or during a lower-priority render.
+useDeferredValue is a valuable addition to React's Concurrent Mode API, helping you manage and coordinate updates in your application for a smoother user experience.
+
+#### Anatomy of useDeferredValue:
+
+The useDeferredValue hook takes two arguments:
+
+- `value`: This is the value that you want to defer. It can be any JavaScript value, including primitive types, objects, or functions.
+
+- `config`(optional): The configuration object that allows you to control how the deferred value is handled.
+  It includes the following options:
+- timeoutMs (default: 5000ms): This is the maximum time the value can be deferred. After this timeout, the deferred value will be applied regardless of whether the application is idle.
+- startTransition (default: true): If set to true, it will use startTransition to defer value changes. If set to false, it will defer without starting a transition, which can be useful for more fine-grained control.
+- suspense (default: false): If set to true, it enables the use of Suspense for managing deferred updates.
+
+#### Key Concepts:
+
+- `Deferred Value`: The primary purpose of useDeferredValue is to take a value and defer its updates. This means that when you change the value frequently (e.g., in response to user interactions), React will wait for the right moment to apply these changes, usually during idle time or lower-priority rendering.
+
+- `Idle Time`: Idle time refers to moments when the browser or application is not busy with high-priority tasks, like rendering critical UI updates. useDeferredValue leverages idle time to apply deferred changes efficiently.
+
+- `Concurrent Mode`: useDeferredValue is part of the Concurrent Mode API in React, which is designed to improve the user experience by making it possible to handle multiple tasks concurrently without blocking the main thread.
+
+#### Use Cases:
+
+- `Reducing Jank`: Use useDeferredValue to defer updates to frequently changing UI elements, reducing jank and ensuring a smoother user experience, especially in scenarios like animations or fast user interactions.
+
+```javascript
+// Imagine you have an animation that updates its position frequently. Without useDeferredValue, it can lead to jank. With useDeferredValue, you can defer the animation's position update to improve smoothness.
+import React, { useDeferredValue, useState } from "react";
+
+function AnimatedElement() {
+  const [position, setPosition] = useState(0);
+
+  const deferredPosition = useDeferredValue(position);
+
+  // Update the position frequently
+  const updatePosition = () => {
+    setPosition(position + 1);
+    requestAnimationFrame(updatePosition);
+  };
+
+  updatePosition(); // Start the animation
+
+  return (
+    <div style={{ transform: `translateX(${deferredPosition}px)` }}>
+      Animated Content
+    </div>
+  );
+}
+```
+
+- `Prioritizing Important Updates`: You can prioritize critical updates by rendering them immediately and deferring less critical updates to when the application is idle, improving the perceived performance.
+
+```javascript
+// Suppose you have a chat application where incoming messages need to be shown immediately, but user typing indicators can be deferred.
+import React, { useDeferredValue, useState } from "react";
+
+function ChatWindow({ messages, typingIndicator }) {
+  const deferredTypingIndicator = useDeferredValue(typingIndicator);
+
+  return (
+    <div>
+      {messages.map((message, index) => (
+        <div key={index}>{message}</div>
+      ))}
+      {deferredTypingIndicator && (
+        <div>{deferredTypingIndicator} is typing...</div>
+      )}
+    </div>
+  );
+}
+```
+
+- `Load Balancing`: In applications with heavy computation or network requests, you can use useDeferredValue to schedule less critical tasks when the application is idle, ensuring that important work doesn't get delayed.
+
+```javascript
+// Suppose you have a data-intensive dashboard with multiple widgets, and you want to ensure that less critical widgets don't block important updates.
+import React, { useDeferredValue, useState } from "react";
+
+function Dashboard() {
+  const [criticalData, setCriticalData] = useState("");
+  const [lessCriticalData, setLessCriticalData] = useState("");
+
+  const deferredLessCriticalData = useDeferredValue(lessCriticalData);
+
+  const handleUpdateData = (isCritical) => {
+    if (isCritical) {
+      setCriticalData("Critical Data Updated");
+    } else {
+      setLessCriticalData("Less Critical Data Updated");
+    }
+  };
+  return (
+    <div>
+      <button onClick={() => handleUpdateData(true)}>
+        Update Critical Data
+      </button>
+      <button onClick={() => handleUpdateData(false)}>
+        Update Less Critical Data
+      </button>
+      <div>{criticalData}</div>
+      <div>{deferredLessCriticalData}</div>
+    </div>
+  );
+}
+```
+
+- `Enhancing Responsiveness`: Use useDeferredValue to enhance the responsiveness of your application by allowing user interactions to feel more immediate, even when there are ongoing updates.
+
+```javascript
+// Suppose you have a search input where search results are updated as the user types. You can use useDeferredValue to make the search more responsive by deferring the search results update.
+import React, { useDeferredValue, useState } from 'react';
+
+function SearchBar() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+
+  const deferredSearchResults = useDeferredValue(searchResults);
+
+  const handleSearch = (query) => {
+    setSearchTerm(query);
+
+    // Simulate an API call or expensive search operation
+    setTimeout(() => {
+      const results = /* Perform search based on query */;
+      setSearchResults(results);
+    }, 300);
+  };
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => handleSearch(e.target.value)}
+      />
+      {deferredSearchResults.map((result, index) => (
+        <div key={index}>{result}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+#### Common Pitfalls:
+
+- Overusing Deferred Values: Using useDeferredValue for every value in your application can lead to unnecessary complexity and potentially make your application harder to understand. Use it judiciously for values that genuinely benefit from deferred updates.
+
+- Misconfiguring timeoutMs: Be cautious with the timeoutMs parameter. Setting it too high might lead to delayed updates, while setting it too low might defeat the purpose of deferring values. Choose an appropriate value based on your application's requirements.
+
+- Not Considering Priorities: Keep in mind that useDeferredValue defers updates to lower-priority renders. If a value is critical and must be updated immediately, using useDeferredValue might not be the right choice.
+
+- Complex Configurations: While the config object allows for fine-grained control, overly complex configurations can make your code harder to maintain. Stick to the defaults unless you have a specific need for customization.
+
 ---
 
 ## 🔥 useEffect <a name="5"></a>
