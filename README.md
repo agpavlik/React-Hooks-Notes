@@ -29,19 +29,19 @@ This guide contains explanations and examples of 18 React Hooks.
 
 ## 🔥 useContext <a name="2"></a>
 
-`useContext` allows to access and consume context data within a React component. To fully understand useContext, it's essential to grasp the concept of context in React and how it can be used to efficiently pass data down the component tree. Context in React is a mechanism that provides a way to share data, like themes, authentication, or other application-wide settings, between components without explicitly passing the data through every level of the component tree. It's particularly useful for managing state and making data accessible to multiple components that are not directly connected in the component hierarchy.
+`useContext` allows to access and consume context data within a React component. To fully understand useContext, it's essential to grasp the concept of context in React and how it can be used to efficiently pass data down the component tree. `Context` in React is a mechanism that provides a way to share data, like themes, authentication, or other application-wide settings, between components without explicitly passing the data through every level of the component tree. It's particularly useful for managing state and making data accessible to multiple components that are not directly connected in the component hierarchy.
 
-Anatomy of useContext:
+#### Anatomy of useContext:
 
 useContext is a hook that's used to access the context within a functional component. It takes a context object as an argument and returns the current context value for that context. Here's how it works:
 
-- Creating a Context: To use useContext, you first need to create a context using the createContext function. This function takes an initial value as an argument and returns a context object.
+- `Creating a Context`: To use useContext, you first need to create a context using the createContext function. This function takes an initial value as an argument and returns a context object.
 
 ```javascript
 const MyContext = React.createContext(initialValue);
 ```
 
-- Providing Context: The context data is typically provided at a higher level in the component tree using the Context.Provider component. It sets the value that can be accessed by any child component that subscribes to this context.
+- `Providing Context`: The context data is typically provided at a higher level in the component tree using the Context.Provider component. It sets the value that can be accessed by any child component that subscribes to this context.
 
 ```javascript
 <MyContext.Provider value={contextValue}>
@@ -49,27 +49,76 @@ const MyContext = React.createContext(initialValue);
 </MyContext.Provider>
 ```
 
-- Consuming Context: Now, you can use the useContext hook in any functional component that is a descendant of the Context.Provider. It allows you to access the context data.
+- `Consuming Context`: Now, you can use the useContext hook in any functional component that is a descendant of the Context.Provider. It allows you to access the context data.
 
 ```javascript
 const contextData = useContext(MyContext);
 ```
 
-Key Concepts:
+#### Key Concepts:
 
-- Provider-Consumer Relationship: useContext relies on the provider-consumer relationship. The provider sets the context value, and the consumer (the component that uses useContext) reads that value.
-- Avoid Prop Drilling: useContext is helpful in eliminating prop drilling, which is the process of passing data down the component tree via props. It simplifies the code and makes it more maintainable.
-- Default Value: When a component accesses a context with useContext, it will receive the value from the nearest Context.Provider ancestor in the component tree. If there's no provider, it will use the default value provided when the context was created.
+- `Provider-Consumer Relationship`: useContext relies on the provider-consumer relationship. The provider sets the context value, and the consumer (the component that uses useContext) reads that value.
+- `Avoid Prop Drilling`: useContext is helpful in eliminating prop drilling, which is the process of passing data down the component tree via props. It simplifies the code and makes it more maintainable.
+- `Default Value`: When a component accesses a context with useContext, it will receive the value from the nearest Context.Provider ancestor in the component tree. If there's no provider, it will use the default value provided when the context was created.
 
-Use Cases:
+#### Use Cases:
 
-Theme Switching: You can use context to manage the theme of your application. Components that need access to the current theme can consume the theme context to style themselves accordingly.
+- `Theme Switching`: You can use context to manage the theme of your application. Components that need access to the current theme can consume the theme context to style themselves accordingly.
 
-User Authentication: Storing user authentication status and user information in context makes it accessible to various parts of the application, like headers, sidebars, and protected routes.
+```javascript
+// First, create a theme context and a provider:
+// ThemeContext.js
+import React, { createContext, useState } from "react";
 
-Localization: You can use context to provide language and translation data to components that need to display content in different languages.
+export const ThemeContext = createContext();
 
-Common Pitfalls:
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState("light");
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+---
+// Now, you can use the useContext hook to access the theme in any component:
+// App.js
+import React, { useContext } from 'react';
+import { ThemeContext, ThemeProvider } from './ThemeContext';
+
+const App = () => {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
+  return (
+    <div className={theme}>
+      <button onClick={toggleTheme}>Toggle Theme</button>
+    </div>
+  );
+};
+
+export default App;
+
+```
+
+- `User Authentication`: Storing user authentication status and user information in context makes it accessible to various parts of the application, like headers, sidebars, and protected routes.
+
+```javascript
+
+```
+
+- `Localization`: You can use context to provide language and translation data to components that need to display content in different languages.
+
+```javascript
+
+```
+
+#### Common Pitfalls:
 
 - Overusing Context: It's important to use context judiciously. Don't store data that is not truly global in context, as it can lead to unnecessary re-renders and complexity.
 - Performance Concerns: Using context for deeply nested components can lead to performance issues, as changes in context can trigger re-renders for many components. Consider optimizing by using memoization or breaking down the context into smaller, more specialized contexts.
@@ -89,13 +138,15 @@ Common Pitfalls:
 
 `useEffect` is a hook provided by React that allows you to perform side effects in functional components. Side effects are operations that happen outside of the usual React component lifecycle, like fetching data from an API, modifying the DOM, setting up subscriptions, or scheduling timers. These operations are crucial for building dynamic and interactive applications.
 
-Anatomy of useEffect: It is a function that takes two arguments:
+#### Anatomy of useEffect:
+
+It is a function that takes two arguments:
 
 1. `Effect function`: This is the first argument, and it's a function that contains the code for your side effect. It's executed after the component has rendered. This function can return a cleanup function, which will be called when the component unmounts or when dependencies change.
 
 2. `Dependency array`: The second argument is an array that contains variables or values that the effect depends on. When any of these dependencies change, the effect function will be re-executed. If you pass an empty array ([]), the effect runs once when the component mounts and doesn't depend on any specific variable.
 
-Use Cases:
+#### Use Cases:
 
 - `Fetching Data`: You can use useEffect to fetch data from an API when the component mounts or when certain dependencies change.
 
@@ -200,7 +251,7 @@ function TimerExample() {
 }
 ```
 
-Common Pitfalls:
+#### Common Pitfalls:
 
 - Not including dependencies when necessary, leading to unintended side effects.
 - Forgetting to return a cleanup function, causing memory leaks or unintended behavior.
@@ -242,7 +293,7 @@ Common Pitfalls:
 
 `useReducer` is a powerful and versatile hook in React that provides a more controlled way to manage state in your components compared to useState. It's especially useful when dealing with complex state management or when you need to perform state updates based on the previous state.
 
-Anatomy of useReducer:
+#### Anatomy of useReducer:
 
 At its core, useReducer is a function that helps you manage state in your React components. It takes two arguments: a `reducer function` and an `initial state`. The reducer function is responsible for specifying how the state should change in response to various actions, and the initial state sets the starting point for your state management.
 
@@ -282,14 +333,14 @@ At its core, useReducer is a function that helps you manage state in your React 
   console.log(state.count); // Access the current count
   ```
 
-Benefits of useReducer:
+#### Benefits of useReducer:
 
 - Predictable State Updates: With useReducer, state updates are predictable and follow a clear pattern. The reducer function specifies how the state should change in response to actions.
 - Complex State Management: It's excellent for managing complex state logic, such as forms, lists, or any state that depends on the previous state.
 - Testing: Reducer functions are pure functions, making them easy to test, which is crucial for writing robust and maintainable code.
 - Readability: Separating the logic for state updates into a single reducer function can improve the readability of your components, especially as they grow in complexity.
 
-Use cases:
+#### Use cases:
 
 - `Counter Example`: In this simple example, we'll create a counter using useReducer. We have two actions, "INCREMENT" and "DECREMENT," to update the count.
 
@@ -663,13 +714,13 @@ export default ChatApp;
 
 `useRef` is a React hook that provides a simple and effective way to reference and manipulate DOM elements, as well as to store values that persist across renders, reducing the need for additional state management. It is primarily used to access and interact with DOM elements directly, but its value-persisting feature also makes it a powerful tool for a wide range of use cases.
 
-Anatomy of useRef:
+#### Anatomy of useRef:
 
 - Creation: To create a useRef object, you can use the useRef function. It doesn't require an initial value like useState does.
 
 - DOM Interaction: You can attach a ref attribute to a React element in your JSX to gain access to the DOM element it represents. Once created, a ref object can be assigned to the ref attribute, allowing you to manipulate the DOM element directly.
 
-Key Concepts:
+#### Key Concepts:
 
 - Mutable Ref: A useRef object is a mutable object, and its value can be changed without causing the component to re-render. This makes it suitable for storing references to DOM elements, values that don't trigger re-renders, and various other use cases.
 
@@ -679,7 +730,7 @@ Key Concepts:
 
 - Lifecycle Independence: Unlike state variables, which are tied to a component's lifecycle, useRef doesn't change its value when the component re-renders. It remains consistent and is suitable for persisting values and references across renders.
 
-Use Cases:
+#### Use Cases:
 
 - `DOM Manipulation`: useRef is frequently used to reference and manipulate DOM elements, such as focusing an input field, measuring elements, or triggering animations.
 
@@ -769,7 +820,7 @@ function VideoPlayer() {
 }
 ```
 
-Common Pitfalls:
+#### Common Pitfalls:
 
 - Directly Mutating the current Property: Be cautious when directly modifying the current property of a useRef. While it's mutable, doing so should be reserved for special cases. Mutating current won't trigger re-renders, which means React won't be aware of changes, potentially leading to unexpected behavior.
 
@@ -783,7 +834,7 @@ Common Pitfalls:
 
 `useState` is a React hook that allows functional components to declare and manage state. It enables you to introduce dynamic behavior into your components by defining variables that can hold and update data. These state variables are the building blocks of interactive and responsive interfaces. `useState` is a cornerstone of React development because it empowers functional components to manage dynamic data and reactivity. It simplifies state management and reduces the complexity of your code by handling updates and re-renders automatically. This makes your components more predictable and easier to maintain.
 
-Anatomy of useState:
+#### Anatomy of useState:
 
 - Creation: To create a state variable, you call the useState function with an initial state value. The function returns an array with two elements: the current state value and a function to update that state.
 
@@ -791,7 +842,7 @@ Anatomy of useState:
 
 - State Updater: The second element is a function that allows you to modify the state, triggering re-renders of the component with the updated state.
 
-Use Cases:
+#### Use Cases:
 
 - `Managing Component State`: Use useState to declare and manage component-specific state, such as form input values, visibility toggles, or any data that should change over time.
 
