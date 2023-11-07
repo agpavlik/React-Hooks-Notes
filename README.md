@@ -65,11 +65,6 @@ function DataFetchingExample() {
       try {
         const response = await fetch("https://api.example.com/data");
         const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
     fetchData();
   }, []); // Empty dependency array ensures it runs once on mount
 
@@ -98,7 +93,6 @@ function DOMUpdateExample() {
     if (isActive) {
       document.getElementById("myElement").classList.add("active");
     } else {
-      document.getElementById("myElement").classList.remove("active");
     }
   }, [isActive]);
 
@@ -503,17 +497,139 @@ function UserAuthentication() {
 export default UserAuthentication;
 ```
 
+- `Accordion Component`: In this example, we'll create an accordion component that allows you to expand and collapse sections. useReducer will help us manage the state of each section.
+
+```javascript
+import React, { useReducer } from "react";
+
+const initialState = { sections: [] };
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "TOGGLE_SECTION":
+      const updatedSections = state.sections.map((section, index) => {
+        if (index === action.payload) {
+          return { ...section, isOpen: !section.isOpen };
+        }
+        return section;
+      });
+      return { sections: updatedSections };
+    case "ADD_SECTION":
+      return {
+        sections: [...state.sections, { title: action.payload, isOpen: false }],
+      };
+    default:
+      return state;
+  }
+};
+
+function Accordion() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const addSection = (title) => {
+    dispatch({ type: "ADD_SECTION", payload: title });
+  };
+  return (
+    <div>
+      <button onClick={() => addSection("Section 1")}>Add Section</button>
+      {state.sections.map((section, index) => (
+        <div key={index}>
+          <button
+            onClick={() => dispatch({ type: "TOGGLE_SECTION", payload: index })}
+          >
+            {section.title}
+          </button>
+          {section.isOpen && <p>Section Content for {section.title}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default Accordion;
+```
+
+- `Chat Application`: In this example, we'll create a simple chat application where you can add messages to different chat rooms using useReducer
+
+```javascript
+import React, { useReducer, useState } from "react";
+
+const initialState = { rooms: {} };
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "ADD_MESSAGE":
+      const { roomId, message } = action.payload;
+      const updatedRooms = { ...state.rooms };
+      updatedRooms[roomId] = [...(updatedRooms[roomId] || []), message];
+      return { rooms: updatedRooms };
+    default:
+      return state;
+  }
+};
+function ChatApp() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [message, setMessage] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("general");
+
+  const addMessage = () => {
+    dispatch({
+      type: "ADD_MESSAGE",
+      payload: { roomId: selectedRoom, message },
+    });
+    setMessage("");
+  };
+  return (
+    <div>
+      <div>
+        <select
+          onChange={(e) => setSelectedRoom(e.target.value)}
+          value={selectedRoom}
+        >
+          <option value="general">General</option>
+          <option value="random">Random</option>
+        </select>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button onClick={addMessage}>Send</button>
+      </div>
+      <div>
+        {state.rooms[selectedRoom] &&
+          state.rooms[selectedRoom].map((msg, index) => (
+            <p key={index}>{msg}</p>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+export default ChatApp;
+```
+
 ## 🔥 useRef <a name="15"></a>
 
-`useRef` is a React hook that provides a simple and effective way to reference and manipulate DOM elements, as well as to store values that persist across renders, reducing the need for additional state management.. It is primarily used to access and interact with DOM elements directly, but its value-persisting feature also makes it a powerful tool for a wide range of use cases.
+`useRef` is a React hook that provides a simple and effective way to reference and manipulate DOM elements, as well as to store values that persist across renders, reducing the need for additional state management. It is primarily used to access and interact with DOM elements directly, but its value-persisting feature also makes it a powerful tool for a wide range of use cases.
+
+Anatomy of useRef:
 
 - Creation: To create a useRef object, you can use the useRef function. It doesn't require an initial value like useState does.
 
 - DOM Interaction: You can attach a ref attribute to a React element in your JSX to gain access to the DOM element it represents. Once created, a ref object can be assigned to the ref attribute, allowing you to manipulate the DOM element directly.
 
-- Value Persistence: useRef can be used to persist values across renders. Changes to the current property of a useRef object do not trigger re-renders, making it suitable for storing mutable data that doesn't impact the rendering of the component.
+Key Concepts:
 
-Key Concepts and Use Cases:
+- Mutable Ref: A useRef object is a mutable object, and its value can be changed without causing the component to re-render. This makes it suitable for storing references to DOM elements, values that don't trigger re-renders, and various other use cases.
+
+- Preservation of Value: The value stored in a useRef persists between renders. When you update a useRef object's current property, it doesn't trigger a re-render, which is in contrast to changing the state using useState, which does cause re-renders.
+
+- .current Property: The useRef object has a current property, which holds the current value of the reference. You can access and modify this property directly, like myRef.current.
+
+- Lifecycle Independence: Unlike state variables, which are tied to a component's lifecycle, useRef doesn't change its value when the component re-renders. It remains consistent and is suitable for persisting values and references across renders.
+
+Use Cases:
 
 - `DOM Manipulation`: useRef is frequently used to reference and manipulate DOM elements, such as focusing an input field, measuring elements, or triggering animations.
 
@@ -586,26 +702,30 @@ function ParentComponent() {
 - `Synchronizing with External Libraries`: useRef is ideal for interfacing with third-party libraries that require direct access to DOM elements.
 
 ```javascript
-//In this example, we use useRef to create a reference to a container element and initialize an external library when the component mounts.
-import React, { useRef, useEffect } from "react";
+//Here's an example of using useRef to interact with an external library, such as a video player. The ref holds a reference to the video player instance:
+import React, { useEffect, useRef } from "react";
+import VideoPlayerLibrary from "video-player-library"; // Replace with your library
 
-function ExternalLibraryIntegrationExample() {
-  const containerRef = useRef();
+function VideoPlayer() {
+  const videoPlayerRef = useRef(null);
 
   useEffect(() => {
-    // Initialize an external library that requires a DOM element
-    externalLibrary.init(containerRef.current);
+    const player = new VideoPlayerLibrary(videoPlayerRef.current);
+    player.initialize();
+    // You can interact with the video player here
   }, []);
 
-  return <div ref={containerRef}>Container for External Library</div>;
+  return <div ref={videoPlayerRef}></div>;
 }
 ```
 
 Common Pitfalls:
 
-- Attempting to mutate the current property of a useRef object directly in a render function, which can lead to unexpected behavior.
+- Directly Mutating the current Property: Be cautious when directly modifying the current property of a useRef. While it's mutable, doing so should be reserved for special cases. Mutating current won't trigger re-renders, which means React won't be aware of changes, potentially leading to unexpected behavior.
 
-- Misusing useRef for managing all state when useState is more appropriate for value changes that trigger re-renders.
+- Using useRef for State: useRef should not be used to manage state that needs to trigger re-renders. For state management, use useState or useReducer instead.
+
+- Not Considering Timing: Since useRef values persist between renders, they may not be immediately updated if you set them within an event handler or effect. Make sure to handle timing considerations appropriately when using useRef.
 
 ---
 
