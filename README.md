@@ -1279,6 +1279,119 @@ export default function Tooltip({ children, targetRect }) {
 
 ## 🔥 useMemo <a name="12"></a>
 
+`useMemo` is used to optimize the performance of your components by memoizing the results of expensive computations. Memoization is a technique where you cache the results of a function so that you can return the cached result when the function is called again with the same arguments, instead of recalculating it. This can be especially useful in React when you have components that re-render frequently, as it can help reduce unnecessary computations and improve the overall performance of your application.
+
+#### Anatomy of useMemo:
+
+The useMemo hook takes two arguments:
+
+```javascript
+const memoizedValue = useMemo(() => computeValue(), [dependency1, dependency2]);
+```
+
+- The first argument is a function that computes and returns the value you want to memoize. This function will only be re-executed when any of the dependencies in the second argument change.
+
+- The second argument is an optional array of dependencies. If provided, React will compare the current values of the dependencies with their previous values on the next render. If any of the dependencies have changed, React will recompute the memoized value by invoking the function, and if the dependencies haven't changed, React will return the previously memoized value without re-executing the function.
+
+#### Key Concepts:
+
+- Memoization: The primary purpose of useMemo is to memoize the result of a function. This means that the function is only executed when necessary, and the cached result is returned for subsequent renders if the dependencies haven't changed.
+
+- Dependencies: Dependencies are an array of values that the memoized function relies on. If any of these values change, the memoized function will be re-executed. By specifying dependencies, you ensure that the memoization is recalculated only when needed, optimizing the component's performance.
+
+#### Use Cases:
+
+- `Expensive Computations`: When you have expensive calculations, such as mathematical computations, data transformations, or data fetching, that are used in a component, you can use useMemo to avoid unnecessary recalculations on every render.
+
+```javascript
+// In this example, the Fibonacci calculation is an expensive recursive function. By using useMemo, we memoize the result for a given n, so it's not recomputed on each render when other parts of the component change.
+import React, { useMemo } from "react";
+
+function Fibonacci({ n }) {
+  const result = useMemo(() => {
+    function calculateFibonacci(num) {
+      if (num <= 1) return num;
+      return calculateFibonacci(num - 1) + calculateFibonacci(num - 2);
+    }
+    return calculateFibonacci(n);
+  }, [n]);
+
+  return (
+    <div>
+      Fibonacci({n}) is {result}
+    </div>
+  );
+}
+```
+
+- `Avoiding Unnecessary Re-renders`: useMemo is particularly useful in conjunction with the useEffect hook. You can memoize values and functions used within useEffect to ensure that the effect only runs when the specific dependencies change, preventing excessive re-renders.
+
+```javascript
+// In this example, we use useMemo to memoize the fetchData function, ensuring that it is only invoked when the searchTerm dependency changes. This prevents unnecessary API requests when other parts of the component are updated.
+import React, { useState, useEffect, useMemo } from "react";
+
+function DataFetchingComponent() {
+  const [data, setData] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchData = useMemo(() => {
+    async function fetchDataFromAPI() {
+      const response = await fetch(
+        `https://api.example.com/data?search=${searchTerm}`
+      );
+      const data = await response.json();
+      setData(data);
+    }
+    fetchDataFromAPI();
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchData(); // This effect only runs when searchTerm changes
+  }, [searchTerm]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <ul>{data && data.map((item) => <li key={item.id}>{item.name}</li>)}</ul>
+    </div>
+  );
+}
+```
+
+- `Optimizing Rendering`: In cases where you have a component with complex rendering logic, useMemo can help in optimizing the rendering process by caching the results of functions that determine what to render.
+
+```javascript
+// In this example, we use useMemo to compute the filteredData based on the data and filters dependencies. This optimizes rendering by avoiding the recalculation of filtered data on every render, ensuring that it only updates when the data or filters change.
+import React, { useMemo } from 'react';
+
+function ComplexRenderingComponent({ data, filters }) {
+  const filteredData = useMemo(() => {
+    return data.filter((item) => filters.includes(item.category));
+  }, [data, filters]);
+
+  return (
+    <div>
+      <h1>Filtered Data</h1>
+      <ul>
+        {filteredData.map((item) => (
+          <li key={item.id}>{item.name}</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+```
+
+#### Common Pitfalls:
+
+- Overusing useMemo: It's essential to use useMemo judiciously. Overusing it can lead to unnecessary complexity in your code. Only use it when you genuinely need to optimize performance for specific computations.
+- Dependency Arrays: Be cautious when specifying dependencies. Ensure that you include all the values that the memoized function depends on, and avoid creating infinite loops by unintentionally changing dependencies.
+- Avoiding Side Effects: useMemo should not be used for functions with side effects (e.g., modifying state, making network requests). For those cases, use useEffect instead.
+
 ---
 
 ## 🔥 useMutationEffect <a name="13"></a>
