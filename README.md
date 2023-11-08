@@ -1,6 +1,6 @@
 # React Hooks Notes
 
-This guide contains explanations and examples of 16 React Hooks.
+This guide contains explanations and examples of 15 React Hooks.
 
 - [useCallback](#1)
 - [useContext](#2)
@@ -11,13 +11,12 @@ This guide contains explanations and examples of 16 React Hooks.
 - [useImperativeHandle](#8)
 - [useInsertionEffect](#10)
 - [useLayoutEffect](#11)
-  -- [useMemo](#12)
-  -- [useMutationEffect](#13)
+- [useMemo](#12)
 - [useReducer](#14) ❗
 - [useRef](#15) ❗
 - [useState](#16) ❗
-  -- [useSyncExternalStore](#17)
-  -- [useTransition](#18)
+- [useSyncExternalStore](#17)
+- [useTransition](#18)
 
 ---
 
@@ -1394,10 +1393,6 @@ function ComplexRenderingComponent({ data, filters }) {
 
 ---
 
-## 🔥 useMutationEffect <a name="13"></a>
-
----
-
 ## 🔥 useReducer <a name="14"></a>
 
 `useReducer` is a powerful and versatile hook in React that provides a more controlled way to manage state in your components compared to useState. It's especially useful when dealing with complex state management or when you need to perform state updates based on the previous state.
@@ -2715,11 +2710,127 @@ Common Pitfalls:
 
 ## 🔥 useSyncExternalStore <a name="17"></a>
 
+`useSyncExternalStore` is a React Hook that lets you subscribe to an external store.
+
+## Anatomy
+
+```javascript
+const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?)
+```
+
+- subscribe: A function that takes a single callback argument and subscribes it to the store. When the store changes, it should invoke the provided callback. This will cause the component to re-render. The subscribe function should return a function that cleans up the subscription.
+
+- getSnapshot: A function that returns a snapshot of the data in the store that’s needed by the component. While the store has not changed, repeated calls to getSnapshot must return the same value. If the store changes and the returned value is different (as compared by Object.is), React re-renders the component.
+
+- optional getServerSnapshot: A function that returns the initial snapshot of the data in the store. It will be used only during server rendering and during hydration of server-rendered content on the client. The server snapshot must be the same between the client and the server, and is usually serialized and passed from the server to the client. If you omit this argument, rendering the component on the server will throw an error.
+
+#### Use Cases
+
+- `Subscribing to an external store`
+
+Most of your React components will only read data from their props, state, and context. However, sometimes a component needs to read some data from some store outside of React that changes over time. This includes:
+
+- Third-party state management libraries that hold state outside of React.
+- Browser APIs that expose a mutable value and events to subscribe to its changes.
+  Call useSyncExternalStore at the top level of your component to read a value from an external data store.
+
+```javascript
+import { useSyncExternalStore } from "react";
+import { todosStore } from "./todoStore.js";
+
+function TodosApp() {
+  const todos = useSyncExternalStore(
+    todosStore.subscribe,
+    todosStore.getSnapshot
+  );
+  // ...
+}
+```
+
+It returns the snapshot of the data in the store. You need to pass two functions as arguments:
+
+- The subscribe function should subscribe to the store and return a function that unsubscribes.
+- The getSnapshot function should read a snapshot of the data from the store.
+  React will use these functions to keep your component subscribed to the store and re-render it on changes.
+
+For example, in the sandbox below, todosStore is implemented as an external store that stores data outside of React. The TodosApp component connects to that external store with the useSyncExternalStore Hook.
+
+```javascript
+// App.js
+import { useSyncExternalStore } from 'react';
+import { todosStore } from './todoStore.js';
+
+export default function TodosApp() {
+  const todos = useSyncExternalStore(todosStore.subscribe, todosStore.getSnapshot);
+  return (
+    <>
+      <button onClick={() => todosStore.addTodo()}>Add todo</button>
+      <hr />
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>{todo.text}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+---
+
+// todoStore.js
+// This is an example of a third-party store
+// that you might need to integrate with React.
+
+// If your app is fully built with React,
+// we recommend using React state instead.
+
+let nextId = 0;
+let todos = [{ id: nextId++, text: 'Todo #1' }];
+let listeners = [];
+
+export const todosStore = {
+  addTodo() {
+    todos = [...todos, { id: nextId++, text: 'Todo #' + nextId }]
+    emitChange();
+  },
+  subscribe(listener) {
+    listeners = [...listeners, listener];
+    return () => {
+      listeners = listeners.filter(l => l !== listener);
+    };
+  },
+  getSnapshot() {
+    return todos;
+  }
+};
+
+function emitChange() {
+  for (let listener of listeners) {
+    listener();
+  }
+}
+
+```
+
+#### Common Pitfalls
+
+- The store snapshot returned by getSnapshot must be immutable. If the underlying store has mutable data, return a new immutable snapshot if the data has changed. Otherwise, return a cached last snapshot.
+
+- If a different subscribe function is passed during a re-render, React will re-subscribe to the store using the newly passed subscribe function. You can prevent this by declaring subscribe outside the component.
+
+- If the store is mutated during a non-blocking transition update, React will fall back to performing that update as blocking. Specifically, React will call getSnapshot a second time just before applying changes to the DOM. If it returns a different value than when it was called originally, React will restart the transition update from scratch, this time applying it as a blocking update, to ensure that every component on screen is reflecting the same version of the store.
+
+- It’s not recommended to suspend a render based on a store value returned by useSyncExternalStore. The reason is that mutations to the external store cannot be marked as non-blocking transition updates, so they will trigger the nearest Suspense fallback, replacing already-rendered content on screen with a loading spinner, which typically makes a poor UX.
+
 ---
 
 ## 🔥 useTransition <a name="18"></a>
 
 ---
+
+```
+
+```
 
 ```
 
