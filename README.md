@@ -2826,12 +2826,27 @@ function emitChange() {
 
 ## 🔥 useTransition <a name="18"></a>
 
----
+`useTransition` is a React Hook that lets you update the state without blocking the UI.
 
+#### Anatomy
+
+```javascript
+const [isPending, startTransition] = useTransition();
 ```
 
-```
+useTransition does not take any parameters.
+useTransition returns an array with exactly two items:
 
-```
+- The isPending flag that tells you whether there is a pending transition.
+- The startTransition function that lets you mark a state update as a transition.
 
-```
+#### Use cases
+
+#### Common Pitfaals
+
+- useTransition is a Hook, so it can only be called inside components or custom Hooks. If you need to start a transition somewhere else (for example, from a data library), call the standalone startTransition instead.
+- You can wrap an update into a transition only if you have access to the set function of that state. If you want to start a transition in response to some prop or a custom Hook value, try useDeferredValue instead.
+- The function you pass to startTransition must be synchronous. React immediately executes this function, marking all state updates that happen while it executes as transitions. If you try to perform more state updates later (for example, in a timeout), they won’t be marked as transitions.
+- A state update marked as a transition will be interrupted by other state updates. For example, if you update a chart component inside a transition, but then start typing into an input while the chart is in the middle of a re-render, React will restart the rendering work on the chart component after handling the input update.
+- Transition updates can’t be used to control text inputs.
+- If there are multiple ongoing transitions, React currently batches them together. This is a limitation that will likely be removed in a future release.
