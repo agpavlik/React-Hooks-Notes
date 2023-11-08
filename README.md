@@ -2842,6 +2842,89 @@ useTransition returns an array with exactly two items:
 
 #### Use cases
 
+- `Marking a state update as a non-blocking transition`
+  Call useTransition at the top level of your component to mark state updates as non-blocking transitions.
+
+```javascript
+import { useState, useTransition } from "react";
+
+function TabContainer() {
+  const [isPending, startTransition] = useTransition();
+  // ...
+}
+```
+
+useTransition returns an array with exactly two items:
+
+- The isPending flag that tells you whether there is a pending transition.
+- The startTransition function that lets you mark a state update as a transition.
+  You can then mark a state update as a transition like this:
+
+```javascript
+function TabContainer() {
+  const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState("about");
+  function selectTab(nextTab) {
+    startTransition(() => {
+      setTab(nextTab);
+    });
+  }
+  // ...
+}
+```
+
+Transitions let you keep the user interface updates responsive even on slow devices.
+
+With a transition, your UI stays responsive in the middle of a re-render. For example, if the user clicks a tab but then change their mind and click another tab, they can do that without waiting for the first re-render to finish.
+
+- `Updating the parent component in a transition`
+  You can update a parent component’s state from the useTransition call, too. For example, this TabButton component wraps its onClick logic in a transition:
+
+```javascript
+export default function TabButton({ children, isActive, onClick }) {
+  const [isPending, startTransition] = useTransition();
+  if (isActive) {
+    return <b>{children}</b>;
+  }
+  return (
+    <button
+      onClick={() => {
+        startTransition(() => {
+          onClick();
+        });
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+Because the parent component updates its state inside the onClick event handler, that state update gets marked as a transition. This is why, like in the earlier example, you can click on “Posts” and then immediately click “Contact”. Updating the selected tab is marked as a transition, so it does not block user interactions.
+
+```javascript
+// TabButton.js
+import { useTransition } from "react";
+
+export default function TabButton({ children, isActive, onClick }) {
+  const [isPending, startTransition] = useTransition();
+  if (isActive) {
+    return <b>{children}</b>;
+  }
+  return (
+    <button
+      onClick={() => {
+        startTransition(() => {
+          onClick();
+        });
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
 #### Common Pitfaals
 
 - useTransition is a Hook, so it can only be called inside components or custom Hooks. If you need to start a transition somewhere else (for example, from a data library), call the standalone startTransition instead.
