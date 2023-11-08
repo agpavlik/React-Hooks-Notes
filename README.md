@@ -1059,6 +1059,76 @@ useLayoutEffect(setup, dependencies?)
 
 #### Use Cases
 
+- `Measuring layout before the browser repaints the screen`
+  Most components don’t need to know their position and size on the screen to decide what to render. They only return some JSX. Then the browser calculates their layout (position and size) and repaints the screen.
+
+Sometimes, that’s not enough. Imagine a tooltip that appears next to some element on hover. If there’s enough space, the tooltip should appear above the element, but if it doesn’t fit, it should appear below. In order to render the tooltip at the right final position, you need to know its height (i.e. whether it fits at the top).
+
+To do this, you need to render in two passes:
+
+- Render the tooltip anywhere (even with a wrong position).
+- Measure its height and decide where to place the tooltip.
+- Render the tooltip again in the correct place.
+  All of this needs to happen before the browser repaints the screen. You don’t want the user to see the tooltip moving. Call useLayoutEffect to perform the layout measurements before the browser repaints the screen:
+
+```javascript
+function Tooltip() {
+  const ref = useRef(null);
+  const [tooltipHeight, setTooltipHeight] = useState(0); // You don't know real height yet
+
+  useLayoutEffect(() => {
+    const { height } = ref.current.getBoundingClientRect();
+    setTooltipHeight(height); // Re-render now that you know the real height
+  }, []);
+
+  // ...use tooltipHeight in the rendering logic below...
+}
+```
+
+Here’s how this works step by step:
+
+- Tooltip renders with the initial tooltipHeight = 0 (so the tooltip may be wrongly positioned).
+- React places it in the DOM and runs the code in useLayoutEffect.
+- Your useLayoutEffect measures the height of the tooltip content and triggers an immediate re-render.
+- Tooltip renders again with the real tooltipHeight (so the tooltip is correctly positioned).
+- React updates it in the DOM, and the browser finally displays the tooltip.
+  Hover over the buttons below and see how the tooltip adjusts its position depending on whether it fits:
+
+```javascript
+import { useRef, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import TooltipContainer from "./TooltipContainer.js";
+
+export default function Tooltip({ children, targetRect }) {
+  const ref = useRef(null);
+  const [tooltipHeight, setTooltipHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const { height } = ref.current.getBoundingClientRect();
+    setTooltipHeight(height);
+    console.log("Measured tooltip height: " + height);
+  }, []);
+
+  let tooltipX = 0;
+  let tooltipY = 0;
+  if (targetRect !== null) {
+    tooltipX = targetRect.left;
+    tooltipY = targetRect.top - tooltipHeight;
+    if (tooltipY < 0) {
+      // It doesn't fit above, so place below.
+      tooltipY = targetRect.bottom;
+    }
+  }
+
+  return createPortal(
+    <TooltipContainer x={tooltipX} y={tooltipY} contentRef={ref}>
+      {children}
+    </TooltipContainer>,
+    document.body
+  );
+}
+```
+
 #### Common Pitfalls
 
 - useLayoutEffect is a Hook, so you can only call it at the top level of your component or your own Hooks. You can’t call it inside loops or conditions. If you need that, extract a component and move the Effect there.
