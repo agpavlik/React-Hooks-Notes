@@ -1,6 +1,6 @@
 # React Hooks Notes
 
-This guide contains explanations and examples of 17 React Hooks.
+This guide contains explanations and examples of 16 React Hooks.
 
 -- [useCallback](#1)
 
@@ -10,9 +10,8 @@ This guide contains explanations and examples of 17 React Hooks.
 - [useEffect](#5) ❗
 - [useId](#7)
 - [useImperativeHandle](#8)
-  -- [useImperativeMethods](#9)
-  -- [useInsertionEffect](#10)
-  -- [useLayoutEffect](#11)
+- [useInsertionEffect](#10)
+- [useLayoutEffect](#11)
   -- [useMemo](#12)
   -- [useMutationEffect](#13)
 - [useReducer](#14) ❗
@@ -958,15 +957,119 @@ function ParentComponent() {
 
 ---
 
-## 🔥 useImperativeMethods <a name="9"></a>
+## 🔥 useInsertionEffect <a name="10"></a>
 
----
+`useInsertionEffect` allows inserting elements into the DOM before any layout effects fire.
 
-## 🔥 useImperativeMethods <a name="10"></a>
+#### Anatomy
+
+```javascript
+useInsertionEffect(setup, dependencies?)
+```
+
+- setup: The function with your Effect’s logic. Your setup function may also optionally return a cleanup function. When your component is added to the DOM, but before any layout effects fire, React will run your setup function. After every re-render with changed dependencies, React will first run the cleanup function (if you provided it) with the old values, and then run your setup function with the new values. When your component is removed from the DOM, React will run your cleanup function.
+
+- optional dependencies: The list of all reactive values referenced inside of the setup code. Reactive values include props, state, and all the variables and functions declared directly inside your component body. If your linter is configured for React, it will verify that every reactive value is correctly specified as a dependency. The list of dependencies must have a constant number of items and be written inline like [dep1, dep2, dep3]. React will compare each dependency with its previous value using the Object.is comparison algorithm. If you don’t specify the dependencies at all, your Effect will re-run after every re-render of the component.
+
+#### Use Cases
+
+- `Injecting dynamic styles from CSS-in-JS libraries`
+  Traditionally, you would style React components using plain CSS.
+
+```javascript
+// In your JS file:
+<button className="success" />
+
+// In your CSS file:
+.success { color: green; }
+```
+
+Some teams prefer to author styles directly in JavaScript code instead of writing CSS files. This usually requires using a CSS-in-JS library or a tool. There are three common approaches to CSS-in-JS:
+
+- Static extraction to CSS files with a compiler
+- Inline styles, e.g. <div style={{ opacity: 1 }}>
+- Runtime injection of <style> tags
+  If you use CSS-in-JS, we recommend a combination of the first two approaches (CSS files for static styles, inline styles for dynamic styles). We don’t recommend runtime <style> tag injection for two reasons:
+
+- Runtime injection forces the browser to recalculate the styles a lot more often.
+- Runtime injection can be very slow if it happens at the wrong time in the React lifecycle.
+
+The first problem is not solvable, but useInsertionEffect helps you solve the second problem. Call useInsertionEffect to insert the styles before any layout effects fire:
+
+```javascript
+// Inside your CSS-in-JS library
+let isInserted = new Set();
+function useCSS(rule) {
+  useInsertionEffect(() => {
+    // As explained earlier, we don't recommend runtime injection of <style> tags.
+    // But if you have to do it, then it's important to do in useInsertionEffect.
+    if (!isInserted.has(rule)) {
+      isInserted.add(rule);
+      document.head.appendChild(getStyleForRule(rule));
+    }
+  });
+  return rule;
+}
+
+function Button() {
+  const className = useCSS("...");
+  return <div className={className} />;
+}
+```
+
+Similarly to useEffect, useInsertionEffect does not run on the server. If you need to collect which CSS rules have been used on the server, you can do it during rendering:
+
+```javascript
+let collectedRulesSet = new Set();
+
+function useCSS(rule) {
+  if (typeof window === "undefined") {
+    collectedRulesSet.add(rule);
+  }
+  useInsertionEffect(() => {
+    // ...
+  });
+  return rule;
+}
+```
+
+#### Common Pitfalls
+
+- Effects only run on the client. They don’t run during server rendering.
+- You can’t update state from inside useInsertionEffect.
+- By the time useInsertionEffect runs, refs are not attached yet.
+- useInsertionEffect may run either before or after the DOM has been updated. You shouldn’t rely on the DOM being updated at any particular time.
+- Unlike other types of Effects, which fire cleanup for every Effect and then setup for every Effect, useInsertionEffect will fire both cleanup and setup one component at a time. This results in an “interleaving” of the cleanup and setup functions.
 
 ---
 
 ## 🔥 useLayoutEffect <a name="11"></a>
+
+`useLayoutEffect` is a version of useEffect that fires before the browser repaints the screen.
+
+#### Anatomy
+
+```javascript
+useLayoutEffect(setup, dependencies?)
+```
+
+- setup: The function with your Effect’s logic. Your setup function may also optionally return a cleanup function. Before your component is added to the DOM, React will run your setup function. After every re-render with changed dependencies, React will first run the cleanup function (if you provided it) with the old values, and then run your setup function with the new values. Before your component is removed from the DOM, React will run your cleanup function.
+
+- optional dependencies: The list of all reactive values referenced inside of the setup code. Reactive values include props, state, and all the variables and functions declared directly inside your component body. If your linter is configured for React, it will verify that every reactive value is correctly specified as a dependency. The list of dependencies must have a constant number of items and be written inline like [dep1, dep2, dep3]. React will compare each dependency with its previous value using the Object.is comparison. If you omit this argument, your Effect will re-run after every re-render of the component.
+
+#### Use Cases
+
+#### Common Pitfalls
+
+- useLayoutEffect is a Hook, so you can only call it at the top level of your component or your own Hooks. You can’t call it inside loops or conditions. If you need that, extract a component and move the Effect there.
+
+- When Strict Mode is on, React will run one extra development-only setup+cleanup cycle before the first real setup. This is a stress-test that ensures that your cleanup logic “mirrors” your setup logic and that it stops or undoes whatever the setup is doing. If this causes a problem, implement the cleanup function.
+
+- If some of your dependencies are objects or functions defined inside the component, there is a risk that they will cause the Effect to re-run more often than needed. To fix this, remove unnecessary object and function dependencies. You can also extract state updates and non-reactive logic outside of your Effect.
+
+- Effects only run on the client. They don’t run during server rendering.
+
+- The code inside useLayoutEffect and all state updates scheduled from it block the browser from repainting the screen. When used excessively, this makes your app slow. When possible, prefer useEffect.
 
 ---
 
