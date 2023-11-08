@@ -2,23 +2,24 @@
 
 This guide contains explanations and examples of 17 React Hooks.
 
-- [useCallback](#1)
+-- [useCallback](#1)
+
 - [useContext](#2)
 - [useDebugValue](#3)
 - [useDeferredValue](#4)
 - [useEffect](#5) ❗
 - [useId](#7)
 - [useImperativeHandle](#8)
-- [useImperativeMethods](#9)
-- [useInsertionEffect](#10)
-- [useLayoutEffect](#11)
-- [useMemo](#12)
-- [useMutationEffect](#13)
+  -- [useImperativeMethods](#9)
+  -- [useInsertionEffect](#10)
+  -- [useLayoutEffect](#11)
+  -- [useMemo](#12)
+  -- [useMutationEffect](#13)
 - [useReducer](#14) ❗
 - [useRef](#15) ❗
 - [useState](#16) ❗
-- [useSyncExternalStore](#17)
-- [useTransition](#18)
+  -- [useSyncExternalStore](#17)
+  -- [useTransition](#18)
 
 ---
 
@@ -64,19 +65,46 @@ const contextData = useContext(MyContext);
 
 - `Theme Switching`: You can use context to manage the theme of your application. Components that need access to the current theme can consume the theme context to style themselves accordingly.
 
-```javascript
+````javascript
 // First, create a theme context and a provider:
 // ThemeContext.js
 import React, { createContext, useState } from "react";
 
 export const ThemeContext = createContext();
+```javascript
+//Suppose you have a custom hook for form validation, and you want to display descriptive labels for the validation errors. In this example, useDebugValue is used to display the validation errors in the React DevTools with descriptive labels.
+import { useState, useDebugValue } from "react";
 
-export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+function useFormValidation(initialState) {
+  const [values, setValues] = useState(initialState);
+  const [errors, setErrors] = useState({});
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!values.email) {
+      newErrors.email = "Email is required";
+    }
+
+    if (!values.password) {
+      newErrors.password = "Password is required";
+    }
+    setErrors(newErrors);
+
+    // Display validation errors in React DevTools
+    useDebugValue(errors, (errors) => {
+      return Object.keys(errors).length === 0
+        ? "No validation errors"
+        : `Validation Errors: ${JSON.stringify(errors)}`;
+    });
   };
+
+  return {
+    values,
+    errors,
+    validateForm,
+  };
+}
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -103,7 +131,7 @@ const App = () => {
 
 export default App;
 
-```
+````
 
 - `User Authentication`: Storing user authentication status and user information in context makes it accessible to various parts of the application, like headers, sidebars, and protected routes.
 
@@ -229,7 +257,7 @@ useDebugValue takes twuseId is a React Hook for generating unique IDs that can b
 
 - `Displaying Relevant Context`: You can use useDebugValue to display information about the component's internal state, props, or other relevant data. For example, you could show the current state of a timer component or the data being fetched by an API call.
 
-````javascript
+```javascript
 // Suppose you have a component that fetches data from an API, and you want to display the current status of the data fetch. In this example, we use useDebugValue to display the loading and error states in the React DevTools, making it easier to track the status of the API call.
 import { useState, useEffect, useDebugValue } from "react";
 
@@ -269,7 +297,11 @@ function DataFetchingComponent() {
   if (data.error) {
     return <div>Error: {data.error.message}</div>;
   }
-  return <div>Data: {useId is a React Hook for generating unique IDs that can be passed to accessibility attributes.isplaying. This can be especially helpful when dealing with complex data structures.
+  return <div>Data: {{data.value}</div>;
+}
+```
+
+- `Descriptive Labels`: useDebugValue allows you to provide clear, human-readable labels for the data you're displaying. This can be especially helpful when dealing with complex data structures.
 
 ```javascript
 //Suppose you have a custom hook for form validation, and you want to display descriptive labels for the validation errors. In this example, useDebugValue is used to display the validation errors in the React DevTools with descriptive labels.
@@ -305,7 +337,7 @@ function useFormValidation(initialState) {
     validateForm,
   };
 }
-````
+```
 
 - `Custom Hooks`: Custom hooks can use useDebugValue to expose the state or behavior of the hook for better debugging. For instance, a custom form validation hook can display error messages or the current state of form inputs.
 
@@ -337,6 +369,8 @@ function useTimer(initialTime) {
 - Performance Impact: While useDebugValue is designed for lazy evaluation, you should still be cautious about the performance impact of the formatting function. Make sure it doesn't perform expensive computations that could slow down your app.
 
 - Proper Formatting: Ensure that the formatting function you provide makes the debugging information more informative and easier to understand. Inappropriate or overly complex formatting may hinder rather than help debugging.
+
+useId is a React Hook for generating unique IDs that can be passed to accessibility attributes.isplaying. This can be especially helpful when dealing with complex data structures.
 
 ---
 
@@ -928,7 +962,7 @@ function ParentComponent() {
 
 ---
 
-## 🔥 useInsertionEffect <a name="10"></a>
+## 🔥 useImperativeMethods <a name="10"></a>
 
 ---
 
@@ -2266,3 +2300,7 @@ Common Pitfalls:
 ## 🔥 useTransition <a name="18"></a>
 
 ---
+
+```
+
+```
