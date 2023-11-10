@@ -163,7 +163,7 @@ export default ExpensiveComponent;
 
 `useContext` allows to access and consume context data within a React component. To fully understand useContext, it's essential to grasp the concept of context in React and how it can be used to efficiently pass data down the component tree. `Context` in React is a mechanism that provides a way to share data, like themes, authentication, or other application-wide settings, between components without explicitly passing the data through every level of the component tree. It's particularly useful for managing state and making data accessible to multiple components that are not directly connected in the component hierarchy.
 
-#### Anatomy of useContext:
+#### Anatomy:
 
 useContext is a hook that's used to access the context within a functional component. It takes a context object as an argument and returns the current context value for that context. Here's how it works:
 
@@ -2933,3 +2933,5 @@ export default function TabButton({ children, isActive, onClick }) {
 - A state update marked as a transition will be interrupted by other state updates. For example, if you update a chart component inside a transition, but then start typing into an input while the chart is in the middle of a re-render, React will restart the rendering work on the chart component after handling the input update.
 - Transition updates can’t be used to control text inputs.
 - If there are multiple ongoing transitions, React currently batches them together. This is a limitation that will likely be removed in a future release.
+
+---
